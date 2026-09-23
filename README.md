@@ -10,6 +10,15 @@ We do not decide scientific “truth.” We decide: said vs their manuscript, na
 
 Not a ChatGPT tab. Not a search-only paper chatbot. Not a TED “energy” scorer. Not a full-PDF factory.
 
+## Run locally
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). Copy `.env.example` to `.env.local` when you have Voxide / Scholarxiv keys (not required for the shell).
+
 ## Claim a feature
 
 Board: [`feature_lock.json`](feature_lock.json). Statuses: `unclaimed` | `claimed` | `released`.

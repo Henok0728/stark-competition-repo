@@ -2,6 +2,10 @@
 
 Team log of what shipped, broke, or got cut. Mirror important entries to STARK Changelogs.
 
+## 2026-09-23
+
+- Next.js booth shell: manuscript form, timer, empty debrief panels. No Voxide or Scholarxiv yet.
+
 ## 2026-09-22
 
 - Repo connected. Added `feature_lock.json` (claim board) and this changelog.
