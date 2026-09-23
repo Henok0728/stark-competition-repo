@@ -1,0 +1,17 @@
+export type SessionPhase = "idle" | "prepared" | "talking" | "stopped";
+
+export type CitationStatus = "pending" | "in_corpus" | "not_found" | "unverified";
+
+export type Manuscript = {
+  title: string;
+  question: string;
+  abstract: string;
+  references: [string, string, string, string, string];
+};
+
+export type Citation = {
+  id: string;
+  text: string;
+  status: CitationStatus;
+  source: "manuscript" | "speech";
+};

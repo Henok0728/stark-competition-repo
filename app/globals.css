@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #16120e;
+  --paper: #f3eee6;
+  --rule: #d8d0c4;
+  --rust: #8a3d24;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-rule: var(--rule);
+  --color-rust: var(--rust);
+  --font-sans: var(--font-geist-sans);
+  --font-display: var(--font-fraunces);
+}
+
+html,
+body {
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+  font-weight: 450;
+  font-optical-sizing: auto;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
