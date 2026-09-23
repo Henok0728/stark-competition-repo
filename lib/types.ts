@@ -1,5 +1,7 @@
 export type SessionPhase = "idle" | "prepared" | "talking" | "stopped";
 
+export type SessionMode = "open" | "prepared";
+
 export type CitationStatus = "pending" | "in_corpus" | "not_found" | "unverified";
 
 export type Manuscript = {
@@ -14,4 +16,13 @@ export type Citation = {
   text: string;
   status: CitationStatus;
   source: "manuscript" | "speech";
+};
+
+export type ExaminerPack = {
+  mode: SessionMode;
+  packedAt: string;
+  title: string;
+  question: string;
+  abstract: string;
+  citations: Citation[];
 };
