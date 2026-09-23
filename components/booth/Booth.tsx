@@ -2,22 +2,56 @@
 
 import { useEffect, useState } from "react";
 import { DebriefPanel } from "@/components/booth/DebriefPanel";
+import { ExaminerPackCard } from "@/components/booth/ExaminerPackCard";
 import { ManuscriptForm } from "@/components/booth/ManuscriptForm";
 import { SessionBar } from "@/components/booth/SessionBar";
 import { emptyCitations, emptyManuscript } from "@/lib/mock";
-import type { Manuscript, SessionPhase } from "@/lib/types";
+import { buildPack, loadPack, savePack } from "@/lib/pack";
+import type { ExaminerPack, Manuscript, SessionMode, SessionPhase } from "@/lib/types";
+
+function manuscriptFromPack(pack: ExaminerPack): Manuscript {
+  const references: Manuscript["references"] = ["", "", "", "", ""];
+  pack.citations.forEach((c, i) => {
+    if (i < 5) references[i] = c.text;
+  });
+  return {
+    title: pack.title,
+    question: pack.question,
+    abstract: pack.abstract,
+    references,
+  };
+}
 
 export function Booth() {
   const [manuscript, setManuscript] = useState<Manuscript>(emptyManuscript);
+  const [pack, setPack] = useState<ExaminerPack | null>(null);
   const [phase, setPhase] = useState<SessionPhase>("idle");
   const [elapsed, setElapsed] = useState(0);
-  const [mode, setMode] = useState<"open" | "prepared" | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const stored = loadPack();
+    if (stored) {
+      setPack(stored);
+      setManuscript(manuscriptFromPack(stored));
+      setPhase("prepared");
+    }
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
     if (phase !== "talking") return;
     const id = window.setInterval(() => setElapsed((n) => n + 1), 1000);
     return () => window.clearInterval(id);
   }, [phase]);
+
+  const lockPack = (mode: SessionMode) => {
+    const next = buildPack(manuscript, mode);
+    setPack(next);
+    savePack(next);
+    setPhase("prepared");
+    setElapsed(0);
+  };
 
   const formLocked = phase === "talking";
 
@@ -41,23 +75,11 @@ export function Booth() {
         value={manuscript}
         onChange={setManuscript}
         disabled={formLocked}
-        onPrepare={() => {
-          setMode("prepared");
-          setPhase("prepared");
-          setElapsed(0);
-        }}
-        onOpenTalk={() => {
-          setMode("open");
-          setPhase("prepared");
-          setElapsed(0);
-        }}
+        onPrepare={() => lockPack("prepared")}
+        onOpenTalk={() => lockPack("open")}
       />
 
-      {mode ? (
-        <p className="text-xs uppercase tracking-[0.18em] text-ink/40">
-          {mode === "prepared" ? "Manuscript packed" : "Open talk"}
-        </p>
-      ) : null}
+      {hydrated && pack ? <ExaminerPackCard pack={pack} /> : null}
 
       <SessionBar
         phase={phase}
@@ -72,7 +94,7 @@ export function Booth() {
 
       <DebriefPanel
         transcript=""
-        citations={emptyCitations}
+        citations={pack && pack.mode === "prepared" ? pack.citations : emptyCitations}
         debrief=""
       />
     </div>
