@@ -4,6 +4,7 @@ Team log of what shipped, broke, or got cut. Mirror important entries to STARK C
 
 ## 2026-09-24
 
+- Pull citations from the talk (author-year, Journal of, IEEE). Listed as pending. FEAT-004 released.
 - Transcript no longer records Voxide chatter or start/stop commands. Browser listen starts after a short hush. FEAT-003 released.
 - Booth layout: form collapses after Prepare, timer centered, saved packs as pills.
 - Voxide start/stop: `startPractice` / `stopPractice` drive the booth timer. Widget mounts when `NEXT_PUBLIC_VOXIDE_PUBLIC_KEY` is set. FEAT-002 released.

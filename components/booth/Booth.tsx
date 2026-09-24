@@ -8,12 +8,19 @@ import { PackLibrary } from "@/components/booth/PackLibrary";
 import { SessionBar } from "@/components/booth/SessionBar";
 import { startBrowserListen } from "@/lib/browser-listen";
 import { listPacks, rememberPack } from "@/lib/library";
+import { extractSpeechCitations, mergeCitations } from "@/lib/extract-citations";
 import { emptyCitations, emptyManuscript } from "@/lib/mock";
 import { buildPack, loadPack, savePack } from "@/lib/pack";
 import { bindVivaSession } from "@/lib/session-bridge";
 import { mergeSpeech } from "@/lib/speech-clean";
 import { hushVoxide } from "@/lib/voxide-client";
-import type { ExaminerPack, Manuscript, SessionMode, SessionPhase } from "@/lib/types";
+import type {
+  Citation,
+  ExaminerPack,
+  Manuscript,
+  SessionMode,
+  SessionPhase,
+} from "@/lib/types";
 
 function manuscriptFromPack(pack: ExaminerPack): Manuscript {
   const references: Manuscript["references"] = ["", "", "", "", ""];
@@ -43,6 +50,7 @@ export function Booth() {
   const [elapsed, setElapsed] = useState(0);
   const [live, setLive] = useState("");
   const [transcript, setTranscript] = useState("");
+  const [spoken, setSpoken] = useState<Citation[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -80,7 +88,9 @@ export function Booth() {
   }, [phase]);
 
   const finalizeStop = () => {
-    setTranscript(live.trim());
+    const spokenText = live.trim();
+    setTranscript(spokenText);
+    setSpoken(extractSpeechCitations(spokenText));
     setPhase("stopped");
   };
 
@@ -95,6 +105,7 @@ export function Booth() {
         }
         setLive("");
         setTranscript("");
+        setSpoken([]);
         setElapsed(0);
         setPhase("talking");
         return { ok: true, message: "Practice started." };
@@ -125,6 +136,7 @@ export function Booth() {
     setElapsed(0);
     setLive("");
     setTranscript("");
+    setSpoken([]);
     setFormOpen(false);
   };
 
@@ -176,6 +188,7 @@ export function Booth() {
         onStart={() => {
           setLive("");
           setTranscript("");
+          setSpoken([]);
           setElapsed(0);
           setPhase("talking");
           hushVoxide();
@@ -185,7 +198,10 @@ export function Booth() {
 
       <DebriefPanel
         transcript={phase === "talking" ? live : transcript}
-        citations={pack && pack.mode === "prepared" ? pack.citations : emptyCitations}
+        citations={mergeCitations(
+          pack && pack.mode === "prepared" ? pack.citations : emptyCitations,
+          spoken,
+        )}
         debrief=""
       />
     </div>
