@@ -1,32 +1,18 @@
 "use client";
 
-import { useMemo } from "react";
-import { VoxideClient, VoxideWidget } from "@voxide/react";
-import { vivaSnapshot, vivaStart, vivaStop } from "@/lib/session-bridge";
+import { useEffect, useState } from "react";
+import { VoxideWidget } from "@voxide/react";
+import { ensureVoxideClient } from "@/lib/voxide-client";
 
 export function VoiceRoot() {
   const publicKey = process.env.NEXT_PUBLIC_VOXIDE_PUBLIC_KEY?.trim();
+  const [ready, setReady] = useState(false);
 
-  const client = useMemo(() => {
-    if (!publicKey) return null;
-    const ai = new VoxideClient({ publicKey });
-    ai.register({
-      startPractice: {
-        description:
-          "Start the viva practice timer. The student begins presenting. Only works after they have prepared a manuscript or chosen open talk.",
-        handler: async () => vivaStart(),
-      },
-      stopPractice: {
-        description:
-          "Stop the viva practice timer. The student finished talking.",
-        handler: async () => vivaStop(),
-      },
-    });
-    ai.bindState(() => vivaSnapshot());
-    return ai;
-  }, [publicKey]);
+  useEffect(() => {
+    setReady(true);
+  }, []);
 
-  if (!client) return null;
+  if (!publicKey || !ready) return null;
 
-  return <VoxideWidget client={client} />;
+  return <VoxideWidget client={ensureVoxideClient(publicKey)} theme="light" />;
 }

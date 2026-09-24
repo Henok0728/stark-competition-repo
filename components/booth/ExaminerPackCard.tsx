@@ -1,39 +1,35 @@
+import { Button } from "@/components/ui/Button";
 import type { ExaminerPack } from "@/lib/types";
 
 type Props = {
   pack: ExaminerPack;
+  onEdit: () => void;
 };
 
-export function ExaminerPackCard({ pack }: Props) {
+export function ExaminerPackCard({ pack, onEdit }: Props) {
   const emptyOpen = pack.mode === "open";
+  const refs = pack.citations.length;
 
   return (
-    <section className="border-t border-rule pt-10">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-ink/40">
-        Examiner pack
-      </p>
-      <h2 className="font-display mt-2 text-2xl text-ink">
-        {emptyOpen ? "Open talk — no manuscript." : pack.title || "Untitled"}
-      </h2>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink/55">
-        {emptyOpen
-          ? "Citations will come from speech after you stop. Scholarxiv is not called yet."
-          : pack.question || "No research question packed."}
-      </p>
-      {!emptyOpen && pack.abstract ? (
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink/70">
-          {pack.abstract}
+    <section className="flex items-start justify-between gap-6 border-t border-rule pt-6">
+      <div className="min-w-0">
+        <p className="text-[11px] uppercase tracking-[0.22em] text-ink/40">
+          Packed
         </p>
-      ) : null}
-      {!emptyOpen ? (
-        <ol className="mt-6 max-w-2xl list-decimal space-y-2 pl-5 text-sm text-ink/70">
-          {pack.citations.length === 0 ? (
-            <li className="list-none pl-0 text-ink/35">No references packed.</li>
-          ) : (
-            pack.citations.map((c) => <li key={c.id}>{c.text}</li>)
-          )}
-        </ol>
-      ) : null}
+        <h2 className="font-display mt-1 truncate text-2xl text-ink">
+          {emptyOpen ? "Open talk" : pack.title || "Untitled"}
+        </h2>
+        <p className="mt-1 truncate text-sm text-ink/50">
+          {emptyOpen
+            ? "Citations from speech after you stop"
+            : [pack.question, refs ? `${refs} refs` : "No refs"]
+                .filter(Boolean)
+                .join(" · ")}
+        </p>
+      </div>
+      <Button type="button" tone="ghost" onClick={onEdit}>
+        Edit
+      </Button>
     </section>
   );
 }

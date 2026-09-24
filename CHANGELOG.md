@@ -4,6 +4,7 @@ Team log of what shipped, broke, or got cut. Mirror important entries to STARK C
 
 ## 2026-09-24
 
+- Booth layout: form collapses after Prepare, timer centered, saved packs as pills. Transcript fills from browser speech and Voxide user lines. FEAT-003 released.
 - Voxide start/stop: `startPractice` / `stopPractice` drive the booth timer. Widget mounts when `NEXT_PUBLIC_VOXIDE_PUBLIC_KEY` is set. FEAT-002 released.
 
 ## 2026-09-23

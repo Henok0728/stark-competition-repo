@@ -19,6 +19,7 @@ export type Citation = {
 };
 
 export type ExaminerPack = {
+  id: string;
   mode: SessionMode;
   packedAt: string;
   title: string;

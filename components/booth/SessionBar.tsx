@@ -19,10 +19,10 @@ function formatTime(total: number) {
 }
 
 const captions: Record<SessionPhase, string> = {
-  idle: "Prepare a pack or begin open talk, then say start.",
-  prepared: "Say start, or press Start. Voice drives the timer.",
-  talking: "Talking. Say stop when you are done.",
-  stopped: "Stopped. Say start for a second take.",
+  idle: "Prepare or open talk, then start.",
+  prepared: "The bar is the mic. Start is the clock.",
+  talking: "Listening. Stop when you are done.",
+  stopped: "Stopped. Start again for a second take.",
 };
 
 export function SessionBar({ phase, elapsedSeconds, onStart, onStop }: Props) {
@@ -30,17 +30,11 @@ export function SessionBar({ phase, elapsedSeconds, onStart, onStop }: Props) {
   const canStop = phase === "talking";
 
   return (
-    <div className="flex flex-col gap-5 border-t border-rule pt-8 md:flex-row md:items-end md:justify-between">
-      <div>
-        <p className="text-[11px] uppercase tracking-[0.22em] text-ink/40">
-          Session
-        </p>
-        <p className="font-display mt-1 text-5xl tabular-nums tracking-tight text-ink">
-          {formatTime(elapsedSeconds)}
-        </p>
-        <p className="mt-2 max-w-sm text-sm text-ink/50">{captions[phase]}</p>
-      </div>
-      <div className="flex gap-3">
+    <div className="flex flex-col items-center border-t border-rule pt-12 text-center">
+      <p className="font-display text-7xl tabular-nums tracking-tight text-ink md:text-8xl">
+        {formatTime(elapsedSeconds)}
+      </p>
+      <div className="mt-6 flex gap-3">
         <Button type="button" onClick={onStart} disabled={!canStart}>
           Start
         </Button>
@@ -48,6 +42,7 @@ export function SessionBar({ phase, elapsedSeconds, onStart, onStop }: Props) {
           Stop
         </Button>
       </div>
+      <p className="mt-4 max-w-sm text-sm text-ink/45">{captions[phase]}</p>
     </div>
   );
 }
