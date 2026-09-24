@@ -10,6 +10,7 @@ import { startBrowserListen } from "@/lib/browser-listen";
 import { listPacks, rememberPack } from "@/lib/library";
 import { extractSpeechCitations, mergeCitations } from "@/lib/extract-citations";
 import { emptyCitations, emptyManuscript } from "@/lib/mock";
+import { verifyCitations } from "@/lib/verify-citations";
 import { buildPack, loadPack, savePack } from "@/lib/pack";
 import { bindVivaSession } from "@/lib/session-bridge";
 import { mergeSpeech } from "@/lib/speech-clean";
@@ -51,6 +52,7 @@ export function Booth() {
   const [live, setLive] = useState("");
   const [transcript, setTranscript] = useState("");
   const [spoken, setSpoken] = useState<Citation[]>([]);
+  const [checked, setChecked] = useState<Citation[] | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -87,11 +89,19 @@ export function Booth() {
     };
   }, [phase]);
 
+  const runVerify = (list: Citation[]) => {
+    setChecked(list);
+    void verifyCitations(list).then(setChecked);
+  };
+
   const finalizeStop = () => {
     const spokenText = live.trim();
+    const fromTalk = extractSpeechCitations(spokenText);
     setTranscript(spokenText);
-    setSpoken(extractSpeechCitations(spokenText));
+    setSpoken(fromTalk);
     setPhase("stopped");
+    const fromPack = pack && pack.mode === "prepared" ? pack.citations : emptyCitations;
+    runVerify(mergeCitations(fromPack, fromTalk));
   };
 
   useEffect(() => {
@@ -106,6 +116,7 @@ export function Booth() {
         setLive("");
         setTranscript("");
         setSpoken([]);
+        setChecked(null);
         setElapsed(0);
         setPhase("talking");
         return { ok: true, message: "Practice started." };
@@ -137,7 +148,9 @@ export function Booth() {
     setLive("");
     setTranscript("");
     setSpoken([]);
+    setChecked(null);
     setFormOpen(false);
+    if (mode === "prepared") runVerify(next.citations);
   };
 
   const applyPack = (next: ExaminerPack) => {
@@ -148,6 +161,7 @@ export function Booth() {
     setPhase("prepared");
     setElapsed(0);
     setFormOpen(false);
+    if (current.mode === "prepared") runVerify(current.citations);
   };
 
   const formLocked = phase === "talking";
@@ -189,6 +203,7 @@ export function Booth() {
           setLive("");
           setTranscript("");
           setSpoken([]);
+          setChecked(null);
           setElapsed(0);
           setPhase("talking");
           hushVoxide();
@@ -198,10 +213,13 @@ export function Booth() {
 
       <DebriefPanel
         transcript={phase === "talking" ? live : transcript}
-        citations={mergeCitations(
-          pack && pack.mode === "prepared" ? pack.citations : emptyCitations,
-          spoken,
-        )}
+        citations={
+          checked ??
+          mergeCitations(
+            pack && pack.mode === "prepared" ? pack.citations : emptyCitations,
+            spoken,
+          )
+        }
         debrief=""
       />
     </div>

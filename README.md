@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_VOXIDE_PUBLIC_KEY` so the voice widget appears. Whitelist `localhost` and the EthioDeploy host in the Voxide dashboard. Scholarxiv key is still unused until FEAT-005.
+Open [http://localhost:3000](http://localhost:3000). Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_VOXIDE_PUBLIC_KEY` so the voice widget appears. Whitelist `localhost` and the EthioDeploy host in the Voxide dashboard. Set `SCHOLARXIV_API_KEY` for citation checks (server only). Restart `npm run dev` after changing `.env.local`.
 
 ## Claim a feature
 
