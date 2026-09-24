@@ -6,45 +6,100 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : null;
 }
 
+function titleOf(row: unknown): string | undefined {
+  const r = asRecord(row);
+  if (!r) return undefined;
+  const inner = asRecord(r.paper) ?? r;
+  for (const key of ["title", "ti", "name"]) {
+    const v = inner[key];
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  return undefined;
+}
+
 function collectPapers(payload: unknown): PaperHit[] {
+  if (Array.isArray(payload)) {
+    return payload.map((row) => ({ title: titleOf(row) }));
+  }
   const root = asRecord(payload);
   if (!root) return [];
-  const bags = [root.data, root.papers, root.results, root.items];
+  const bags = [root.data, root.papers, root.results, root.items, root.hits];
   for (const bag of bags) {
     if (Array.isArray(bag)) {
-      return bag.map((row) => {
-        const r = asRecord(row);
-        const inner = r ? asRecord(r.paper) ?? r : null;
-        const title =
-          (inner && typeof inner.title === "string" && inner.title) ||
-          (inner && typeof inner.ti === "string" && inner.ti) ||
-          undefined;
-        return { title };
-      });
+      return bag.map((row) => ({ title: titleOf(row) }));
     }
     const nested = asRecord(bag);
-    if (nested && Array.isArray(nested.data)) {
-      return collectPapers(nested);
+    if (nested) {
+      const deeper = collectPapers(nested);
+      if (deeper.length) return deeper;
     }
   }
   return [];
 }
 
-export async function searchScholarxiv(query: string): Promise<PaperHit[] | null> {
-  const key = process.env.SCHOLARXIV_API_KEY?.trim();
-  if (!key) return null;
-
-  const url = `https://scholarxiv.com/api/v1/papers/search?q=${encodeURIComponent(query)}&limit=3`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${key}` },
-    cache: "no-store",
-  });
-
+async function parse(res: Response): Promise<PaperHit[] | null> {
   if (!res.ok) return null;
-
   try {
     return collectPapers(await res.json());
   } catch {
     return null;
   }
+}
+
+export async function searchScholarxiv(query: string): Promise<PaperHit[] | null> {
+  const key = process.env.SCHOLARXIV_API_KEY?.trim().replace(/^["']|["']$/g, "");
+  if (!key) return null;
+
+  const headers = {
+    Authorization: `Bearer ${key}`,
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  };
+
+  const attempts: Array<() => Promise<Response>> = [
+    () =>
+      fetch(
+        `https://www.scholarxiv.com/api/v1/papers/search?q=${encodeURIComponent(query)}&limit=3`,
+        { headers, cache: "no-store" },
+      ),
+    () =>
+      fetch("https://www.scholarxiv.com/api/v1/papers/search", {
+        method: "POST",
+        headers,
+        cache: "no-store",
+        body: JSON.stringify({
+          searchFilterString: { all: query },
+          maxResults: 3,
+          sortBy: "relevance",
+          sortOrder: "descending",
+        }),
+      }),
+    () =>
+      fetch("https://scholarxiv.com/api/search_papers", {
+        method: "POST",
+        headers,
+        cache: "no-store",
+        body: JSON.stringify({
+          searchFilterString: { all: query },
+          startIndex: 0,
+          maxResults: 3,
+          sortBy: "relevance",
+          sortOrder: "descending",
+        }),
+      }),
+  ];
+
+  let emptyOk = false;
+  for (const run of attempts) {
+    try {
+      const res = await run();
+      const hits = await parse(res);
+      if (hits && hits.length > 0) return hits;
+      if (hits) emptyOk = true;
+    } catch {
+      /* try next shape */
+    }
+  }
+
+  return emptyOk ? [] : null;
 }

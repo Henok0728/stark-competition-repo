@@ -4,6 +4,7 @@ Team log of what shipped, broke, or got cut. Mirror important entries to STARK C
 
 ## 2026-09-24
 
+- Tighter speech citation extract (named 2017 paper titles). Scholarxiv search tries GET then POST. Unverified only if the API/key fails.
 - Scholarxiv Papers API verifies citations: in corpus, not found, or unverified if the key/API fails. Never invent a paper. FEAT-005 released.
 - Pull citations from the talk (author-year, Journal of, IEEE). Listed as pending. FEAT-004 released.
 - Transcript no longer records Voxide chatter or start/stop commands. Browser listen starts after a short hush. FEAT-003 released.

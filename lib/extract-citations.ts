@@ -1,16 +1,25 @@
 import type { Citation } from "./types";
 
 function tidy(text: string) {
-  return text.replace(/\s+/g, " ").replace(/[.,;:]+$/, "").trim();
+  return text
+    .replace(/\s+/g, " ")
+    .replace(/[.,;:]+$/, "")
+    .replace(/\s+(volume|page|pp\.?)\b.*$/i, "")
+    .trim();
 }
 
 function key(text: string) {
   return tidy(text).toLowerCase();
 }
 
+function looksLikeClause(text: string) {
+  return /\b(shows that|allows models|revolutionized|furthermore)\b/i.test(text);
+}
+
 function pushUnique(into: Map<string, Citation>, text: string, i: number) {
   const clean = tidy(text);
-  if (clean.length < 8 || clean.length > 160) return;
+  if (clean.length < 10 || clean.length > 90) return;
+  if (looksLikeClause(clean)) return;
   const k = key(clean);
   if (into.has(k)) return;
   into.set(k, {
@@ -26,22 +35,29 @@ export function extractSpeechCitations(transcript: string): Citation[] {
   const text = transcript.replace(/\s+/g, " ");
   let n = 0;
 
-  const patterns: RegExp[] = [
-    /([A-Z][A-Za-z']+(?:\s+[A-Z][A-Za-z']+){0,3})\s+et\s+al\.?,?\s*((?:19|20)\d{2})/gi,
-    /([A-Z][A-Za-z']+)\s+and\s+([A-Z][A-Za-z']+),?\s*((?:19|20)\d{2})/gi,
-    /IEEE Transactions on [A-Za-z][A-Za-z\s]{2,48}/gi,
-    /Journal of [A-Za-z][A-Za-z\s]{2,48}/gi,
-    /(?:according to|published (?:by|in)|studies from)\s+([^.]{8,80})/gi,
-  ];
+  const namedPaper = /\b(?:19|20)\d{2} paper\s+(.+?)(?:\s+revolutionized|\s+introduced|\s+which\b)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = namedPaper.exec(text))) {
+    n += 1;
+    pushUnique(found, m[1], n);
+  }
 
-  for (const re of patterns) {
-    re.lastIndex = 0;
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(text))) {
-      const raw = m[0].replace(/^(according to|published (?:by|in)|studies from)\s+/i, "");
-      n += 1;
-      pushUnique(found, raw, n);
-    }
+  const etAl = /([A-Z][A-Za-z']+(?:\s+[A-Z][A-Za-z']+){0,3})\s+et\s+al\.?,?\s*((?:19|20)\d{2})/gi;
+  while ((m = etAl.exec(text))) {
+    n += 1;
+    pushUnique(found, m[0], n);
+  }
+
+  const ieee = /IEEE Transactions on [A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){0,6}/gi;
+  while ((m = ieee.exec(text))) {
+    n += 1;
+    pushUnique(found, m[0], n);
+  }
+
+  const journal = /Journal of [A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){0,5}(?=\s*,|\s+volume|\s+page|\s*\.)/gi;
+  while ((m = journal.exec(text))) {
+    n += 1;
+    pushUnique(found, m[0], n);
   }
 
   return [...found.values()];
