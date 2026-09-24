@@ -8,8 +8,15 @@ import { PackLibrary } from "@/components/booth/PackLibrary";
 import { SessionBar } from "@/components/booth/SessionBar";
 import { startBrowserListen } from "@/lib/browser-listen";
 import { listPacks, rememberPack } from "@/lib/library";
-import { extractSpeechCitations, mergeCitations } from "@/lib/extract-citations";
+import {
+  capSpeechCitations,
+  citationsFromTexts,
+  extractSpeechCitations,
+  mergeCitations,
+} from "@/lib/extract-citations";
 import { emptyCitations, emptyManuscript } from "@/lib/mock";
+import { requestDebrief } from "@/lib/request-debrief";
+import { requestExtract } from "@/lib/request-extract";
 import { verifyCitations } from "@/lib/verify-citations";
 import { buildPack, loadPack, savePack } from "@/lib/pack";
 import { bindVivaSession } from "@/lib/session-bridge";
@@ -53,6 +60,7 @@ export function Booth() {
   const [transcript, setTranscript] = useState("");
   const [spoken, setSpoken] = useState<Citation[]>([]);
   const [checked, setChecked] = useState<Citation[] | null>(null);
+  const [debrief, setDebrief] = useState("");
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -89,9 +97,19 @@ export function Booth() {
     };
   }, [phase]);
 
-  const runVerify = (list: Citation[]) => {
+  const runVerify = (list: Citation[], spokenText: string, abstract: string) => {
     setChecked(list);
-    void verifyCitations(list).then(setChecked);
+    setDebrief("");
+    void (async () => {
+      const next = await verifyCitations(list);
+      setChecked(next);
+      const text = await requestDebrief({
+        transcript: spokenText,
+        abstract,
+        citations: next,
+      });
+      setDebrief(text);
+    })();
   };
 
   const finalizeStop = () => {
@@ -101,7 +119,15 @@ export function Booth() {
     setSpoken(fromTalk);
     setPhase("stopped");
     const fromPack = pack && pack.mode === "prepared" ? pack.citations : emptyCitations;
-    runVerify(mergeCitations(fromPack, fromTalk));
+    const abstract = pack?.abstract ?? "";
+    setChecked(mergeCitations(fromPack, fromTalk));
+    setDebrief("");
+    void (async () => {
+      const extra = citationsFromTexts(await requestExtract(spokenText));
+      const speech = capSpeechCitations(mergeCitations(fromTalk, extra));
+      setSpoken(speech);
+      runVerify(mergeCitations(fromPack, speech), spokenText, abstract);
+    })();
   };
 
   useEffect(() => {
@@ -117,6 +143,7 @@ export function Booth() {
         setTranscript("");
         setSpoken([]);
         setChecked(null);
+        setDebrief("");
         setElapsed(0);
         setPhase("talking");
         return { ok: true, message: "Practice started." };
@@ -149,8 +176,9 @@ export function Booth() {
     setTranscript("");
     setSpoken([]);
     setChecked(null);
+    setDebrief("");
     setFormOpen(false);
-    if (mode === "prepared") runVerify(next.citations);
+    if (mode === "prepared") runVerify(next.citations, "", next.abstract);
   };
 
   const applyPack = (next: ExaminerPack) => {
@@ -161,7 +189,9 @@ export function Booth() {
     setPhase("prepared");
     setElapsed(0);
     setFormOpen(false);
-    if (current.mode === "prepared") runVerify(current.citations);
+    if (current.mode === "prepared") {
+      runVerify(current.citations, "", current.abstract);
+    }
   };
 
   const formLocked = phase === "talking";
@@ -204,6 +234,7 @@ export function Booth() {
           setTranscript("");
           setSpoken([]);
           setChecked(null);
+          setDebrief("");
           setElapsed(0);
           setPhase("talking");
           hushVoxide();
@@ -220,7 +251,7 @@ export function Booth() {
             spoken,
           )
         }
-        debrief=""
+        debrief={debrief}
       />
     </div>
   );
