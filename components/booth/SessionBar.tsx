@@ -19,10 +19,10 @@ function formatTime(total: number) {
 }
 
 const captions: Record<SessionPhase, string> = {
-  idle: "Mic is a placeholder until Voxide.",
-  prepared: "Pack is ready. Start when you are standing.",
-  talking: "Talking. Stop when you are done.",
-  stopped: "Stopped. Debrief is still empty.",
+  idle: "Prepare a pack or begin open talk, then say start.",
+  prepared: "Say start, or press Start. Voice drives the timer.",
+  talking: "Talking. Say stop when you are done.",
+  stopped: "Stopped. Say start for a second take.",
 };
 
 export function SessionBar({ phase, elapsedSeconds, onStart, onStop }: Props) {

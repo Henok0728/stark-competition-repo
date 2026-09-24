@@ -2,6 +2,10 @@
 
 Team log of what shipped, broke, or got cut. Mirror important entries to STARK Changelogs.
 
+## 2026-09-24
+
+- Voxide start/stop: `startPractice` / `stopPractice` drive the booth timer. Widget mounts when `NEXT_PUBLIC_VOXIDE_PUBLIC_KEY` is set. FEAT-002 released.
+
 ## 2026-09-23
 
 - Removed team label from the booth header (product name only: Viva).

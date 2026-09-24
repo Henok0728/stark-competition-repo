@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Geist } from "next/font/google";
+import { VoiceRoot } from "@/components/booth/VoiceRoot";
 import "./globals.css";
 
 const geist = Geist({
@@ -27,6 +28,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geist.variable} ${fraunces.variable} antialiased`}>
         {children}
+        <VoiceRoot />
       </body>
     </html>
   );

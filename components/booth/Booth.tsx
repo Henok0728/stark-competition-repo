@@ -7,6 +7,7 @@ import { ManuscriptForm } from "@/components/booth/ManuscriptForm";
 import { SessionBar } from "@/components/booth/SessionBar";
 import { emptyCitations, emptyManuscript } from "@/lib/mock";
 import { buildPack, loadPack, savePack } from "@/lib/pack";
+import { bindVivaSession } from "@/lib/session-bridge";
 import type { ExaminerPack, Manuscript, SessionMode, SessionPhase } from "@/lib/types";
 
 function manuscriptFromPack(pack: ExaminerPack): Manuscript {
@@ -44,6 +45,34 @@ export function Booth() {
     const id = window.setInterval(() => setElapsed((n) => n + 1), 1000);
     return () => window.clearInterval(id);
   }, [phase]);
+
+  useEffect(() => {
+    return bindVivaSession({
+      start: () => {
+        if (phase !== "prepared" && phase !== "stopped") {
+          return {
+            ok: false,
+            message: "Prepare a manuscript or begin open talk first.",
+          };
+        }
+        setPhase("talking");
+        return { ok: true, message: "Practice started." };
+      },
+      stop: () => {
+        if (phase !== "talking") {
+          return { ok: false, message: "Practice is not running." };
+        }
+        setPhase("stopped");
+        return { ok: true, message: "Practice stopped." };
+      },
+      snapshot: () => ({
+        phase,
+        elapsedSeconds: elapsed,
+        canStart: phase === "prepared" || phase === "stopped",
+        canStop: phase === "talking",
+      }),
+    });
+  }, [phase, elapsed]);
 
   const lockPack = (mode: SessionMode) => {
     const next = buildPack(manuscript, mode);

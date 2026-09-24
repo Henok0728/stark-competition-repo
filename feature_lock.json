@@ -1,7 +1,7 @@
 {
   "project_name": "Viva booth (working title)",
   "purpose": "Who owns which slice. Claim in a PR. One owner per feature.",
-  "last_updated": "2026-09-23",
+  "last_updated": "2026-09-24",
   "status_values": ["unclaimed", "claimed", "released"],
   "features": [
     {
@@ -21,11 +21,11 @@
       "id": "FEAT-002",
       "name": "Voxide start/stop",
       "phase": "P2",
-      "status": "unclaimed",
-      "owner": null,
-      "branch": null,
-      "claimed_at": null,
-      "released_at": null,
+      "status": "released",
+      "owner": "Haymanot Seyoum",
+      "branch": "feat/p2-voxide",
+      "claimed_at": "2026-09-24T08:50:00Z",
+      "released_at": "2026-09-24T08:55:00Z",
       "depends_on": ["FEAT-001"],
       "deliverables": ["app/"],
       "verification": "Voice starts and stops the practice timer"
