@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { TextArea, TextField } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import type { Manuscript } from "@/lib/types";
@@ -19,6 +20,14 @@ export function ManuscriptForm({
   onOpenTalk,
   disabled,
 }: Props) {
+  const filled = value.references.filter((r) => r.trim()).length;
+  const [shown, setShown] = useState(() => Math.min(5, Math.max(1, filled || 1)));
+
+  const visible = useMemo(
+    () => value.references.slice(0, shown),
+    [value.references, shown],
+  );
+
   const setRef = (index: number, text: string) => {
     const references = [...value.references] as Manuscript["references"];
     references[index] = text;
@@ -26,21 +35,17 @@ export function ManuscriptForm({
   };
 
   return (
-    <section className="flex flex-col gap-8">
-      <header className="max-w-xl">
+    <section className="flex flex-col gap-6">
+      <header className="max-w-lg">
         <p className="text-[11px] uppercase tracking-[0.22em] text-ink/40">
-          Examiner pack
+          Manuscript
         </p>
-        <h2 className="font-display mt-2 text-3xl leading-tight text-ink md:text-[2.15rem]">
-          Let the booth read the manuscript first.
+        <h2 className="font-display mt-2 text-2xl leading-tight text-ink">
+          Read this first, then listen.
         </h2>
-        <p className="mt-3 text-sm leading-relaxed text-ink/55">
-          Title, question, abstract, five references. No PDF. Skip this for open
-          talk.
-        </p>
       </header>
 
-      <div className="flex flex-col gap-6">
+      <div className="grid gap-5 md:grid-cols-2">
         <TextField
           label="Title"
           placeholder="The work you will defend"
@@ -49,42 +54,54 @@ export function ManuscriptForm({
           onChange={(e) => onChange({ ...value, title: e.target.value })}
         />
         <TextField
-          label="Research question"
+          label="Question"
           placeholder="One sentence"
           value={value.question}
           disabled={disabled}
           onChange={(e) => onChange({ ...value, question: e.target.value })}
         />
-        <TextArea
-          label="Abstract"
-          placeholder="Paste the abstract only"
-          value={value.abstract}
-          disabled={disabled}
-          onChange={(e) => onChange({ ...value, abstract: e.target.value })}
-        />
-        <div className="grid gap-4">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-ink/45">
-            References · five lines
-          </p>
-          {value.references.map((ref, i) => (
-            <TextField
-              key={i}
-              label={`Ref ${i + 1}`}
-              placeholder="Author, year, title — or leave blank"
-              value={ref}
-              disabled={disabled}
-              onChange={(e) => setRef(i, e.target.value)}
-            />
-          ))}
-        </div>
+      </div>
+      <TextArea
+        label="Abstract"
+        placeholder="Paste the abstract only"
+        value={value.abstract}
+        disabled={disabled}
+        rows={4}
+        onChange={(e) => onChange({ ...value, abstract: e.target.value })}
+      />
+      <div className="grid gap-3">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-ink/45">
+          References
+        </p>
+        {visible.map((ref, i) => (
+          <TextField
+            key={i}
+            label={`Ref ${i + 1}`}
+            placeholder="Author, year, title"
+            value={ref}
+            disabled={disabled}
+            onChange={(e) => setRef(i, e.target.value)}
+          />
+        ))}
+        {shown < 5 ? (
+          <Button
+            type="button"
+            tone="ghost"
+            className="self-start px-0"
+            disabled={disabled}
+            onClick={() => setShown((n) => n + 1)}
+          >
+            Add a reference
+          </Button>
+        ) : null}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 pt-2">
+      <div className="flex flex-wrap items-center gap-3">
         <Button type="button" onClick={onPrepare} disabled={disabled}>
-          Prepare, then talk
+          Prepare
         </Button>
         <Button type="button" tone="ghost" onClick={onOpenTalk} disabled={disabled}>
-          Begin open talk
+          Open talk
         </Button>
       </div>
     </section>

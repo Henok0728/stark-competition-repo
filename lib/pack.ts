@@ -17,6 +17,7 @@ export function buildPack(manuscript: Manuscript, mode: SessionMode): ExaminerPa
           }));
 
   return {
+    id: crypto.randomUUID(),
     mode,
     packedAt: new Date().toISOString(),
     title: manuscript.title.trim(),

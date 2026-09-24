@@ -16,7 +16,7 @@ function Pane({
   children: ReactNode;
 }) {
   return (
-    <article className="flex min-h-[14rem] flex-col border-t border-rule pt-5">
+    <article className="flex min-h-[10rem] flex-col border-t border-rule pt-5">
       <h3 className="text-[11px] uppercase tracking-[0.18em] text-ink/40">
         {label}
       </h3>
