@@ -40,13 +40,18 @@ export function DebriefPanel({ transcript, citations, debrief }: Props) {
       <Pane label="Citations">
         {citations.length === 0 ? (
           <p className="text-ink/35">
-            Scholarxiv checks appear here. Never invented.
+            Names and venues from the talk appear here. Scholarxiv is next.
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
             {citations.map((c) => (
               <li key={c.id} className="flex items-start justify-between gap-3">
-                <span>{c.text}</span>
+                <span>
+                  <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-ink/35">
+                    {c.source === "speech" ? "From talk" : "From pack"}
+                  </span>
+                  {c.text}
+                </span>
                 <Badge status={c.status} />
               </li>
             ))}
