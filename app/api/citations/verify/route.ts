@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { titleMatchesClaim } from "@/lib/citation-match";
 import { searchScholarxiv } from "@/lib/scholarxiv";
 import type { CitationStatus } from "@/lib/types";
 
@@ -34,10 +35,15 @@ export async function POST(request: Request) {
       results.push({ query, status: "not_found" });
       continue;
     }
+    const match = hits.find((h) => h.title && titleMatchesClaim(query, h.title));
+    if (!match?.title) {
+      results.push({ query, status: "not_found" });
+      continue;
+    }
     results.push({
       query,
       status: "in_corpus",
-      title: hits.find((h) => h.title)?.title,
+      title: match.title,
     });
   }
 
