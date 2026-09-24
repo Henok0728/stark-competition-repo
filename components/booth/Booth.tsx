@@ -11,8 +11,8 @@ import { listPacks, rememberPack } from "@/lib/library";
 import { emptyCitations, emptyManuscript } from "@/lib/mock";
 import { buildPack, loadPack, savePack } from "@/lib/pack";
 import { bindVivaSession } from "@/lib/session-bridge";
-import { bindTranscriptSink } from "@/lib/transcript-bridge";
-import { userSpeechFromVoxide } from "@/lib/voxide-client";
+import { mergeSpeech } from "@/lib/speech-clean";
+import { hushVoxide } from "@/lib/voxide-client";
 import type { ExaminerPack, Manuscript, SessionMode, SessionPhase } from "@/lib/types";
 
 function manuscriptFromPack(pack: ExaminerPack): Manuscript {
@@ -33,12 +33,6 @@ function withId(pack: ExaminerPack): ExaminerPack {
   return { ...pack, id: crypto.randomUUID() };
 }
 
-function joinLine(current: string, chunk: string) {
-  const next = chunk.trim();
-  if (!next) return current;
-  if (current.includes(next)) return current;
-  return current ? `${current} ${next}` : next;
-}
 
 export function Booth() {
   const [manuscript, setManuscript] = useState<Manuscript>(emptyManuscript);
@@ -71,24 +65,22 @@ export function Booth() {
   }, [phase]);
 
   useEffect(() => {
-    bindTranscriptSink((chunk) => {
-      if (phase !== "talking") return;
-      setLive((cur) => joinLine(cur, chunk));
-    });
-    return () => bindTranscriptSink(null);
-  }, [phase]);
-
-  useEffect(() => {
     if (phase !== "talking") return;
-    return startBrowserListen((chunk) => {
-      setLive((cur) => joinLine(cur, chunk));
-    });
+    hushVoxide();
+    let stopListen: (() => void) | undefined;
+    const wait = window.setTimeout(() => {
+      stopListen = startBrowserListen((chunk) => {
+        setLive((cur) => mergeSpeech(cur, chunk));
+      });
+    }, 1600);
+    return () => {
+      window.clearTimeout(wait);
+      stopListen?.();
+    };
   }, [phase]);
 
   const finalizeStop = () => {
-    const fromVoice = userSpeechFromVoxide();
-    const text = live.trim() || fromVoice.trim();
-    setTranscript(text);
+    setTranscript(live.trim());
     setPhase("stopped");
   };
 
@@ -186,6 +178,7 @@ export function Booth() {
           setTranscript("");
           setElapsed(0);
           setPhase("talking");
+          hushVoxide();
         }}
         onStop={finalizeStop}
       />

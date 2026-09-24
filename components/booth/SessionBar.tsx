@@ -21,7 +21,7 @@ function formatTime(total: number) {
 const captions: Record<SessionPhase, string> = {
   idle: "Prepare or open talk, then start.",
   prepared: "The bar is the mic. Start is the clock.",
-  talking: "Listening. Stop when you are done.",
+  talking: "Speak your defence. Ignore the assistant.",
   stopped: "Stopped. Start again for a second take.",
 };
 
